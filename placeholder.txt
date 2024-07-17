@@ -1,0 +1,73 @@
+import yfinance as yf
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.metrics import classification_report
+
+# Download historical data
+spy = yf.download('SPY', start='2020-01-01', end='2023-01-01')
+
+# Function to calculate technical indicators
+def calculate_indicators(data):
+    data['50_SMA'] = data['Close'].rolling(window=50).mean()
+    data['volatility'] = data['Close'].rolling(window=50).std()
+    data['pct_change'] = data['Close'].pct_change()
+    data['log_return'] = np.log(data['Close'] / data['Close'].shift(1))
+    data['cumulative_return'] = np.exp(data['log_return'].cumsum())
+    data['200_SMA'] = data['Close'].rolling(window=200).mean()
+    data['amount_change'] = data['Close'].diff()
+
+    # Calculate RSI
+    delta = data['Close'].diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+    rs = gain / loss
+    data['RSI'] = 100 - (100 / (1 + rs))
+
+    # Calculate MACD
+    shortEMA = data['Close'].ewm(span=12, adjust=False).mean()
+    longEMA = data['Close'].ewm(span=26, adjust=False).mean()
+    data['MACD'] = shortEMA - longEMA
+
+    # Calculate other indicators as needed (e.g., ROC, Stochastic Oscillator, Bollinger Bands)
+
+    return data.dropna()
+
+# Calculate indicators
+cleaned_spy = calculate_indicators(spy)
+
+# Define features and target
+X = cleaned_spy[['50_SMA', 'volatility', 'pct_change', 'log_return', 'cumulative_return',
+                 '200_SMA', 'amount_change', 'RSI', 'MACD']]
+y = np.where(cleaned_spy['50_SMA'].shift(-1) > cleaned_spy['50_SMA'], 1, 0)  # Example binary target (up/down)
+
+# Split data for training and testing
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Define the model
+rf = RandomForestClassifier(random_state=42)
+
+# Perform Grid Search to find optimal parameters
+param_grid = {
+    'n_estimators': [100, 500, 1000],
+    'max_depth': [None, 10, 20, 30],
+    'min_samples_split': [2, 5, 10],
+    'min_samples_leaf': [1, 2, 4],
+    'bootstrap': [True, False]
+}
+
+grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=3, verbose=2, n_jobs=-1)
+grid_search.fit(X_train, y_train)
+
+# Print the best parameters found
+print("Best Parameters:")
+print(grid_search.best_params_)
+
+# Evaluate the best model
+best_model = grid_search.best_estimator_
+y_pred = best_model.predict(X_test)
+
+# Evaluate performance
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
