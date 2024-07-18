@@ -2,16 +2,19 @@ import pandas as pd
 import yfinance as yf
 from pypfopt import EfficientFrontier, risk_models, expected_returns
 from pypfopt.discrete_allocation import DiscreteAllocation, get_latest_prices
-from get_stocks import get_random_stocks
+from get_stocks import Stocks
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
+
+stocks = Stocks()
+stocks.initialize_stocks()
 
 def generate_portfolio(num_stocks=30):
     """
     Returns an optimized portfolio of randomly selected stocks. Dates are in the range from
     the first of January to yesterday.
     """
-    tickers = get_random_stocks(num_stocks=num_stocks)
+    tickers = stocks.get_random_stocks(num_stocks=num_stocks)
     stock_data = yf.download(tickers, start=datetime.today() - timedelta(days=30*6), end=datetime.today())['Adj Close']
 
     mu = expected_returns.mean_historical_return(stock_data)
@@ -26,4 +29,6 @@ def generate_portfolio(num_stocks=30):
 
     da = DiscreteAllocation(cleaned_weights, latest_prices, total_portfolio_value=50)
     allocation, leftover = da.greedy_portfolio()
+    print('Portfolio:\n')
+    print(allocation)
     return allocation

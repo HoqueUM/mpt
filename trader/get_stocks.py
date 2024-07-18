@@ -3,60 +3,63 @@ import json
 import numpy as np
 import random
 
-def get_stocks():
-    """
-    Returns an array of json objects. A ticker and a price.
-    """
-    url = "https://scanner.tradingview.com/america/scan"
+class Stocks():
+    def __init__(self):
+        self.tickers = None
 
-    payload = json.dumps({
-    "columns": [
-        "name",
-        "description",
-        "logoid",
-        "close"
-    ]
-    })
+    def initialize_stocks(self):
+        """
+        Returns an array of json objects. A ticker and a price.
+        """
+        url = "https://scanner.tradingview.com/america/scan"
 
-    headers = {
-    'Content-Type': 'application/json'
-    }
+        payload = json.dumps({
+        "columns": [
+            "name",
+            "description",
+            "logoid",
+            "close"
+        ]
+        })
 
-    response = requests.request("POST", url, headers=headers, data=payload).json()
-    data = response["data"]
-    tickers = []
-    prices = []
-
-    for i in data:
-        tickers.append(i['d'][0])
-        prices.append(i['d'][3])
-
-    ticker_to_price = []
-
-    for i in range(len(tickers)):
-        obj = {
-            'Ticker': tickers[i],
-            'Price': prices[i]
+        headers = {
+        'Content-Type': 'application/json'
         }
-        ticker_to_price.append(obj)
 
-    return ticker_to_price
+        response = requests.request("POST", url, headers=headers, data=payload).json()
+        data = response["data"]
+        tickers = []
+        prices = []
 
-def get_random_stocks(num_stocks=30):
-    """
-    Returns an array of randomly selected stock below $5. Allows a definition of the amount 
-    of stocks. 
-    """
+        for i in data:
+            tickers.append(i['d'][0])
+            prices.append(i['d'][3])
 
-    stocks = get_stocks()
+        ticker_to_price = []
 
-    filtered_stocks = [obj for obj in stocks if obj['Price'] < 5 and obj['Price'] != 1e6]
+        for i in range(len(tickers)):
+            obj = {
+                'Ticker': tickers[i],
+                'Price': prices[i]
+            }
+            ticker_to_price.append(obj)
 
-    choices = random.sample(filtered_stocks, k=min(num_stocks, len(filtered_stocks)))
+        self.tickers = ticker_to_price
 
-    final_choices = [obj['Ticker'] for obj in choices]
+    def get_random_stocks(self, num_stocks=30):
+        """
+        Returns an array of randomly selected stock below $5. Allows a definition of the amount 
+        of stocks. 
+        """
+        stocks = self.tickers
 
-    return final_choices
+        filtered_stocks = [obj for obj in stocks if obj['Price'] < 5 and obj['Price'] != 1e6]
+
+        choices = random.sample(filtered_stocks, k=min(num_stocks, len(filtered_stocks)))
+
+        final_choices = [obj['Ticker'] for obj in choices]
+
+        return final_choices
 
 
 
