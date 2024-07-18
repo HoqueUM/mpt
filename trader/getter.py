@@ -1,12 +1,34 @@
-from bs4 import BeautifulSoup
 import requests
+import json
+import csv
 
+url = "https://scanner.tradingview.com/america/scan"
 
-url = 'https://www.tradingview.com/markets/stocks-usa/market-movers-all-stocks/'
+payload = json.dumps({
+  "columns": [
+    "name",
+    "description",
+    "logoid",
+    "close"
+  ]
+})
+headers = {
+  'Content-Type': 'application/json'
+}
 
-response = requests.get(url)
-soup = BeautifulSoup(response.content, 'html.parser')
-stocks = soup.find_all('a', class_='apply-common-tooltip tickerNameBox-GrtoTeat tickerName-GrtoTeat')
+response = requests.request("POST", url, headers=headers, data=payload).json()
+data = response["data"]
+tickers = []
+prices = []
 
-for stock in stocks:
-    print(stock.text)
+for i in data:
+    tickers.append(i['d'][0])
+    prices.append(i['d'][3])
+
+with open('stocks.csv', 'w', newline='') as file:
+    writer = csv.writer(file)
+    
+    writer.writerow(['Ticker', 'Price'])
+
+    for ticker, price in zip(tickers, prices):
+        writer.writerow([ticker, price])
