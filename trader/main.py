@@ -1,5 +1,6 @@
 import streamlit as st
 from strat_finder import get_best_strat
+import yfinance as yf
 
 st.title('Best Strategy Finder')
 
