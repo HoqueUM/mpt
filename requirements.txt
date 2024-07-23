@@ -5,4 +5,4 @@ Requests
 streamlit
 vectorbt
 yfinance
-pypfopt
+PyPortfolioOpt
