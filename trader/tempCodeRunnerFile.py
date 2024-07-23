@@ -1,2 +1,1 @@
-    except Exception as e:
-        print(f"Exception: {e}. Retrying...")
+2020-01-01

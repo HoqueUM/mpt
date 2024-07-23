@@ -46,14 +46,14 @@ class Stocks():
 
         self.tickers = ticker_to_price
 
-    def get_random_stocks(self, num_stocks=30):
+    def get_random_stocks(self, num_stocks=30, min_price=3, max_price=5):
         """
         Returns an array of randomly selected stock below $5. Allows a definition of the amount 
         of stocks. 
         """
         stocks = self.tickers
 
-        filtered_stocks = [obj for obj in stocks if obj['Price'] < 5 and obj['Price'] != 1e6]
+        filtered_stocks = [obj for obj in stocks if obj['Price'] <= max_price and  obj['Price'] >= min_price]
 
         choices = random.sample(filtered_stocks, k=min(num_stocks, len(filtered_stocks)))
 
