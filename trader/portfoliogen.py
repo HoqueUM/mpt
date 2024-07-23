@@ -1,6 +1,7 @@
 import pandas as pd
 import yfinance as yf
-from pypfopt import EfficientFrontier, risk_models, expected_returns
+from pypfopt.efficient_frontier import EfficientFrontier
+from pypfopt import risk_models, expected_returns
 from pypfopt.discrete_allocation import DiscreteAllocation, get_latest_prices
 from get_stocks import Stocks
 from datetime import datetime, timedelta
